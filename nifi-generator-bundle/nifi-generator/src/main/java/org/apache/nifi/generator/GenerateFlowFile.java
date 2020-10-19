@@ -225,8 +225,10 @@ public class GenerateFlowFile extends AbstractProcessor {
 
     @Override
     public void onTrigger(final ProcessContext context, final ProcessSession session) {
-        boolean shouldContinue = checkFileLimit(context);
-        if(!shouldContinue) {
+        boolean shouldStop = currentFileCountExceedsLimit(context);
+        if(shouldStop) {
+            getLogger().warn("Generated " + FILE_COUNTER.longValue() + " FlowFiles, which exceeds the limit. Yielding.");
+            context.yield();
             return;
         }
         final byte[] data;
@@ -256,6 +258,7 @@ public class GenerateFlowFile extends AbstractProcessor {
         for (int i = 0; i < context.getProperty(BATCH_SIZE).asInteger(); i++) {
             FlowFile flowFile = session.create();
             FILE_COUNTER.increment();
+            getLogger().info("Current file count value: " + FILE_COUNTER.longValue());
             if (data.length > 0) {
                 flowFile = session.write(flowFile, new OutputStreamCallback() {
                     @Override
@@ -271,9 +274,9 @@ public class GenerateFlowFile extends AbstractProcessor {
         }
     }
 
-    private synchronized boolean checkFileLimit(ProcessContext context) {
+    private synchronized boolean currentFileCountExceedsLimit(ProcessContext context) {
         if(!context.getProperty(FILE_LIMIT).isSet()) {
-            return true;
+            return false;
         }
         final long limit = context.getProperty(FILE_LIMIT).asLong();
         return FILE_COUNTER.longValue() > limit;

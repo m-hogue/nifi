@@ -26,6 +26,11 @@
     <artifactId>nifi-generator-bundle</artifactId>
     <version>1.13.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+    
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
 
     <modules>
         <module>nifi-generator</module>
